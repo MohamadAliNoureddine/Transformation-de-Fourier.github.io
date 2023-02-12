@@ -1,0 +1,93 @@
+#Créer le signal échantillonné
+import numpy as np
+import pandas as ps
+file= open("DU.DALO.01.HHN.D.2022.100.233024.SAC.vel.sac.for.inversion.vel.sac.asc", "r")
+a=file.readlines()
+A=np.array(a)
+données=ps.read_csv('DU.DALO.01.HHN.D.2022.100.233024.SAC.vel.sac.for.inversion.vel.sac.asc',
+                 delimiter=' ',header=None,names=('A','B'))
+x=données['B']
+t=données['A']
+t_e=t-t[0]
+
+
+
+#tracer le signal échantillonné
+import matplotlib.pyplot as plt
+plt.plot(t_e,x,label="Signal échantillonné")
+plt.grid()
+plt.xlabel(r"$t$(s)")
+plt.ylabel(r"Amplitude")
+plt.title(r"Signal sonore")
+#plt.show()
+
+# Calculer la transformation de Fourier
+from numpy.fft import fft,fftfreq
+X=fft(x)
+
+freq=fftfreq(x.size,d=0.010002)#fréquence d'échantillonage
+N=x.size
+X_abs=np.abs(X[:N//2])*2.0/N
+freq_pos=freq[:N//2]
+
+#tracer la transformation de Fourier
+plt.plot(freq_pos,X_abs,label="Amplitude absolue")
+plt.grid()
+plt.xlim(0,10)
+plt.xlabel(r"Fréquence(HZ)")
+plt.ylabel(r"Amplitude $|X(f)|$")
+plt.title("transformée de Fourier")
+plt.legend()
+plt.show()
+
+#tracer la partie réelle et la partie imaginaire
+plt.subplot(2,1,1)
+plt.plot(freq,X.real,label="Partie réelle")
+plt.plot(freq,X.imag,label="Partie imaginaire")
+plt.grid()
+plt.legend()
+plt.xlabel(r"fréquence (Hz)")
+plt.ylabel(r"Amplitude $X(f)$")
+plt.title("Transformée de Fourier")
+plt.subplot(2,1,2)
+plt.plot(freq,X.real,label="Partie réelle")
+plt.plot(freq,X.imag,label="Partie imaginaire")
+plt.xlim(-15,15)
+plt.grid()
+plt.legend()
+plt.xlabel(r"fréquence (Hz)")
+plt.ylabel(r"Amplitude $X(f)$")
+plt.title("Transformée de Fourier autour de la fréquence de signal")
+plt.tight_layout()
+plt.show()
+#spectogramme
+#Sélection des colonnes à traiter
+import scipy.signal as signal
+
+x=données['B']
+t=données['A']
+t_e=t-t[0]
+Te=np.mean(np.diff(t_e))
+f,t,Sxx=signal.spectrogram(x,1/Te,)
+Sxx_red=Sxx[np.where(f<50)]
+f_red=f[np.where(f<50)]
+
+#signal d'origine
+plt.subplot(2,1,1)
+plt.plot(t_e,x)
+plt.grid()
+
+
+#affichage de spectogramme
+plt.subplot(2,1,2)
+plt.plot(t_e,[0]*len(x),label="tf")
+plt.ylim(0,20)
+plt.pcolormesh(t,f_red,Sxx_red,shading='gouraud')
+plt.ylabel('Fréquence (Hz)')
+plt.xlabel('Temps(s)')
+plt.title('Spectogramme ')
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+
